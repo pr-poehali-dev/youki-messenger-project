@@ -439,6 +439,15 @@ function NotificationsSection() {
 }
 
 function ProfileSection() {
+  const [bio, setBio] = useState("Привет! Я использую Youki 🚀");
+  const [editingBio, setEditingBio] = useState(false);
+  const [bioDraft, setBioDraft] = useState(bio);
+
+  const saveBio = () => {
+    setBio(bioDraft.trim() || bio);
+    setEditingBio(false);
+  };
+
   return (
     <div className="flex flex-col h-full animate-fade-in">
       <div className="px-4 pt-5 pb-4">
@@ -466,6 +475,57 @@ function ProfileSection() {
             ))}
           </div>
         </div>
+
+        <div className="glass rounded-2xl p-4 mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg glass flex items-center justify-center flex-shrink-0">
+                <Icon name="FileText" size={14} style={{ color: "hsl(var(--youki-purple))" }} />
+              </div>
+              <span className="text-sm font-semibold">О себе</span>
+            </div>
+            <button
+              onClick={() => { setEditingBio(true); setBioDraft(bio); }}
+              className="w-7 h-7 rounded-lg glass flex items-center justify-center hover:bg-[hsl(var(--youki-purple)/0.15)] transition-colors"
+            >
+              <Icon name="Pencil" size={13} style={{ color: "hsl(var(--youki-purple))" }} />
+            </button>
+          </div>
+          {editingBio ? (
+            <div className="flex flex-col gap-2">
+              <textarea
+                value={bioDraft}
+                onChange={e => setBioDraft(e.target.value)}
+                maxLength={200}
+                rows={3}
+                autoFocus
+                className="w-full bg-transparent text-sm outline-none resize-none placeholder:text-[hsl(var(--muted-foreground))] border border-[hsl(var(--youki-purple)/0.3)] rounded-xl px-3 py-2 focus:border-[hsl(var(--youki-purple)/0.7)] transition-colors"
+                placeholder="Расскажи о себе..."
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>{bioDraft.length}/200</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setEditingBio(false)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-medium glass hover:bg-[hsl(var(--youki-glass))] transition-colors"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    onClick={saveBio}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                    style={{ background: "hsl(var(--youki-purple))", color: "#fff" }}
+                  >
+                    Сохранить
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm leading-relaxed" style={{ color: "hsl(var(--muted-foreground))" }}>{bio}</p>
+          )}
+        </div>
+
         {[
           { icon: "User", label: "Редактировать профиль", colorVar: "--youki-purple" },
           { icon: "Link", label: "Моя ссылка: youki.me/me", colorVar: "--youki-cyan" },
