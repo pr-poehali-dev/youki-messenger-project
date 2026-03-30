@@ -1,7 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 
 type Section = "chats" | "contacts" | "search" | "notifications" | "profile" | "settings";
+
+type ThemeKey = "purple" | "blue" | "rose" | "amber" | "emerald" | "indigo";
+
+const THEMES: { key: ThemeKey; label: string; purple: string; cyan: string; pink: string; bg: string; gradient: string }[] = [
+  { key: "purple",  label: "Фиолет",  purple: "262 80% 65%", cyan: "185 90% 55%", pink: "320 80% 65%", bg: "220 20% 6%",  gradient: "from-purple-600 to-cyan-500" },
+  { key: "blue",    label: "Синий",   purple: "217 91% 60%", cyan: "199 89% 60%", pink: "239 84% 67%", bg: "222 30% 6%",  gradient: "from-blue-500 to-sky-400" },
+  { key: "rose",    label: "Роза",    purple: "336 80% 62%", cyan: "350 90% 65%", pink: "316 73% 62%", bg: "330 20% 6%",  gradient: "from-rose-500 to-pink-400" },
+  { key: "amber",   label: "Янтарь",  purple: "38 92% 55%",  cyan: "45 93% 58%",  pink: "25 90% 60%",  bg: "30 20% 6%",   gradient: "from-amber-500 to-yellow-400" },
+  { key: "emerald", label: "Изумруд", purple: "160 84% 39%", cyan: "172 66% 50%", pink: "142 71% 45%", bg: "160 20% 5%",  gradient: "from-emerald-500 to-teal-400" },
+  { key: "indigo",  label: "Индиго",  purple: "239 84% 67%", cyan: "215 90% 62%", pink: "262 80% 65%", bg: "240 20% 6%",  gradient: "from-indigo-500 to-violet-500" },
+];
+
+function applyTheme(key: ThemeKey) {
+  const t = THEMES.find(t => t.key === key)!;
+  const root = document.documentElement;
+  root.style.setProperty("--youki-purple", t.purple);
+  root.style.setProperty("--youki-cyan", t.cyan);
+  root.style.setProperty("--youki-pink", t.pink);
+  root.style.setProperty("--background", t.bg);
+  root.style.setProperty("--primary", t.purple);
+  root.style.setProperty("--ring", t.purple);
+  localStorage.setItem("youki-theme", key);
+}
 
 const MOCK_CHATS = [
   {
@@ -547,6 +570,12 @@ function ProfileSection() {
 
 function SettingsSection() {
   const [toggles, setToggles] = useState({ notifications: true, sounds: true, readReceipts: true });
+  const [activeTheme, setActiveTheme] = useState<ThemeKey>(() => (localStorage.getItem("youki-theme") as ThemeKey) || "purple");
+
+  const handleTheme = (key: ThemeKey) => {
+    setActiveTheme(key);
+    applyTheme(key);
+  };
 
   const groups = [
     {
@@ -581,6 +610,24 @@ function SettingsSection() {
         <h2 className="text-xl font-bold">Настройки</h2>
       </div>
       <div className="flex-1 overflow-y-auto px-4 space-y-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2 px-1" style={{ color: "hsl(var(--muted-foreground))" }}>Цвет темы</p>
+          <div className="glass rounded-3xl p-4">
+            <div className="grid grid-cols-3 gap-2.5">
+              {THEMES.map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => handleTheme(t.key)}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl transition-all duration-200 ${activeTheme === t.key ? "ring-2 scale-[1.03]" : "hover:bg-[hsl(var(--youki-glass))]"}`}
+                  style={activeTheme === t.key ? { ringColor: `hsl(${t.purple})`, background: `hsl(${t.purple}/0.12)`, outlineOffset: "2px", outline: `2px solid hsl(${t.purple}/0.7)` } : {}}
+                >
+                  <div className={`w-7 h-7 rounded-xl bg-gradient-to-br ${t.gradient} flex-shrink-0 shadow-md`} />
+                  <span className="text-xs font-medium leading-none">{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
         {groups.map(group => (
           <div key={group.label}>
             <p className="text-xs font-semibold uppercase tracking-wider mb-2 px-1" style={{ color: "hsl(var(--muted-foreground))" }}>{group.label}</p>
@@ -629,6 +676,11 @@ function SettingsSection() {
 export default function Index() {
   const [section, setSection] = useState<Section>("chats");
   const [openChat, setOpenChat] = useState<typeof MOCK_CHATS[0] | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("youki-theme") as ThemeKey | null;
+    if (saved) applyTheme(saved);
+  }, []);
 
   const totalUnread = MOCK_CHATS.reduce((s, c) => s + (c.unread || 0), 0);
   const totalNotifs = MOCK_NOTIFICATIONS.filter(n => !n.read).length;
